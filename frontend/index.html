@@ -1,20 +1,42 @@
 <!doctype html>
 <html>
   <head>
-    <title>WebRTC Call</title>
+    <title>WebRTC Video Call</title>
+    <style>
+      #incomingCall {
+        display: none;
+        border: 2px solid #333;
+        padding: 10px;
+        width: 200px;
+        background-color: #f0f0f0;
+      }
+      video {
+        border: 1px solid black;
+        margin: 5px;
+      }
+    </style>
   </head>
   <body>
     <h2>WebRTC Video Call</h2>
 
+    <!-- Videos -->
     <video id="localVideo" autoplay muted width="300"></video>
     <video id="remoteVideo" autoplay width="300"></video>
 
     <br /><br />
+
+    <!-- Call Buttons -->
     <button onclick="startCall()">Start Call</button>
 
-    <!-- Important -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Incoming Call UI -->
+    <div id="incomingCall">
+      <h3>Incoming Call...</h3>
+      <button onclick="acceptCall()">Accept</button>
+      <button onclick="rejectCall()">Reject</button>
+    </div>
 
+    <!-- Socket.io -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
