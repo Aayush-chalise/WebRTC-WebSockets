@@ -1,13 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>WebRTC Call</title>
   </head>
   <body>
-    <video id="localVideo" autoplay></video>
-    <video id="remoteVideo" autoplay></video>
+    <h2>WebRTC Video Call</h2>
+
+    <video id="localVideo" autoplay muted width="300"></video>
+    <video id="remoteVideo" autoplay width="300"></video>
+
+    <br /><br />
+    <button onclick="startCall()">Start Call</button>
+
+    <!-- Important -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <script src="script.js"></script>
   </body>
