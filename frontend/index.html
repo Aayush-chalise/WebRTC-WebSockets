@@ -10,6 +10,9 @@
         width: 200px;
         background-color: #f0f0f0;
       }
+      .vid1 {
+        display: flex;
+      }
       video {
         border: 1px solid black;
         margin: 5px;
@@ -20,9 +23,29 @@
     <h2>WebRTC Video Call</h2>
 
     <!-- Videos -->
-    <video id="localVideo" autoplay muted width="300"></video>
-    <video id="remoteVideo" autoplay width="300"></video>
-
+    <div class="vid1">
+      <div>
+        <h3>Local Video...</h3>
+        <video
+          id="localVideo"
+          autoplay
+          muted
+          width="400"
+          autoplay
+          height="500"
+        ></video>
+      </div>
+      <div>
+        <h3>Remote Video...</h3>
+        <video
+          id="remoteVideo"
+          autoplay
+          width="400"
+          autoplay
+          height="500"
+        ></video>
+      </div>
+    </div>
     <br /><br />
 
     <!-- Call Buttons -->

@@ -1,7 +1,12 @@
-// Connect to signaling server
-const socket = io("http://localhost:5000"); // Use backend URL
+// REPLACE THIS URL with your actual ngrok URL
+const NGROK_URL = "https://unshifted-reasonlessly-billye.ngrok-free.dev/";
 
-// DOM Elements
+const socket = io(NGROK_URL, {
+  extraHeaders: {
+    "ngrok-skip-browser-warning": "true",
+  },
+});
+
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 const incomingCallDiv = document.getElementById("incomingCall");
@@ -9,115 +14,96 @@ const incomingCallDiv = document.getElementById("incomingCall");
 let localStream;
 let peerConnection;
 let incomingOffer = null;
+let pendingCandidates = [];
 
-// STUN server config
 const configuration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 
-// ======================
-// Get Camera + Mic
-// ======================
+// Visual Connection Status
+socket.on("connect", () => {
+  console.log("Connected to server!");
+  document.body.style.border = "5px solid green";
+});
+
+socket.on("connect_error", (err) => {
+  console.log("Connection error:", err);
+  document.body.style.border = "5px solid red";
+});
+
 async function initMedia() {
-  localStream = await navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true,
-  });
-  localVideo.srcObject = localStream;
+  if (!localStream) {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    localVideo.srcObject = localStream;
+  }
 }
 
-// ======================
-// Create PeerConnection
-// ======================
 function createPeerConnection() {
   peerConnection = new RTCPeerConnection(configuration);
 
-  // Send ICE candidates
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
       socket.emit("ice-candidate", event.candidate);
     }
   };
 
-  // Receive remote stream
   peerConnection.ontrack = (event) => {
     remoteVideo.srcObject = event.streams[0];
   };
 
-  // Add local tracks
-  localStream.getTracks().forEach((track) => {
-    peerConnection.addTrack(track, localStream);
-  });
-
-  // Connection state change log
-  peerConnection.onconnectionstatechange = () => {
-    console.log("Connection state:", peerConnection.connectionState);
-  };
+  localStream
+    .getTracks()
+    .forEach((track) => peerConnection.addTrack(track, localStream));
 }
 
-// ======================
-// Start Call (Caller)
-// ======================
+// Caller Side
 async function startCall() {
-  alert("Calling...");
-
   await initMedia();
   createPeerConnection();
-
   const offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
-
   socket.emit("offer", offer);
+  console.log("Offer sent...");
 }
 
-// ======================
-// Receive Offer (Receiver)
-// ======================
-socket.on("offer", (offer) => {
+// Receiver Side
+socket.on("offer", async (offer) => {
+  console.log("Received offer...");
   incomingOffer = offer;
-  incomingCallDiv.style.display = "block"; // Show Accept/Reject
+  incomingCallDiv.style.display = "block";
 });
 
-// ======================
-// Accept Call
-// ======================
 async function acceptCall() {
   incomingCallDiv.style.display = "none";
-
   await initMedia();
   createPeerConnection();
 
-  await peerConnection.setRemoteDescription(incomingOffer);
-
+  await peerConnection.setRemoteDescription(
+    new RTCSessionDescription(incomingOffer),
+  );
   const answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
-
   socket.emit("answer", answer);
+
+  // Process any ICE candidates that arrived before the connection was ready
+  pendingCandidates.forEach((candidate) => {
+    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  });
+  pendingCandidates = [];
 }
 
-// ======================
-// Reject Call
-// ======================
-function rejectCall() {
-  incomingOffer = null;
-  incomingCallDiv.style.display = "none";
-}
-
-// ======================
-// Receive Answer (Caller)
-// ======================
 socket.on("answer", async (answer) => {
-  await peerConnection.setRemoteDescription(answer);
-  alert("Call Connected!");
+  console.log("Received answer...");
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
 });
 
-// ======================
-// Receive ICE Candidates
-// ======================
 socket.on("ice-candidate", async (candidate) => {
-  try {
-    await peerConnection.addIceCandidate(candidate);
-  } catch (err) {
-    console.error(err);
+  if (peerConnection && peerConnection.remoteDescription) {
+    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  } else {
+    pendingCandidates.push(candidate);
   }
 });
