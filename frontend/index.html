@@ -10,17 +10,35 @@
         width: 200px;
         background-color: #f0f0f0;
       }
+      .title {
+        text-align: center;
+      }
       .vid1 {
         display: flex;
+        justify-content: center;
+        align-items: center;
       }
+      .startButton {
+        padding: 5px;
+        border-radius: 14px;
+        text-align: center;
+        background-color: green;
+        color: white;
+        font-size: 20px;
+      }
+      .buttoncontainer {
+        text-align: center;
+      }
+
       video {
         border: 1px solid black;
         margin: 5px;
+        border-radius: 10px;
       }
     </style>
   </head>
   <body>
-    <h2>WebRTC Video Call</h2>
+    <h2 class="title">WebRTC Video Call</h2>
 
     <!-- Videos -->
     <div class="vid1">
@@ -32,7 +50,7 @@
           muted
           width="400"
           autoplay
-          height="500"
+          height="400"
         ></video>
       </div>
       <div>
@@ -42,15 +60,16 @@
           autoplay
           width="400"
           autoplay
-          height="500"
+          height="400"
         ></video>
       </div>
     </div>
     <br /><br />
 
     <!-- Call Buttons -->
-    <button onclick="startCall()">Start Call</button>
-
+    <div class="buttoncontainer">
+      <button onclick="startCall()" class="startButton">Start Call</button>
+    </div>
     <!-- Incoming Call UI -->
     <div id="incomingCall">
       <h3>Incoming Call...</h3>
