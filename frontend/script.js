@@ -1,4 +1,3 @@
-// REPLACE THIS URL with your actual ngrok URL
 const NGROK_URL = "https://unshifted-reasonlessly-billye.ngrok-free.dev/";
 
 const socket = io(NGROK_URL, {
@@ -42,30 +41,43 @@ async function initMedia() {
 }
 
 function createPeerConnection() {
-  peerConnection = new RTCPeerConnection(configuration);
+  peerConnection = new RTCPeerConnection(configuration); // this creates a connection object that manages everything like Audio/video transmission, ICE candidates, Network negotiation, Media tracks
+  // configuration tells if peers are behing NAT use STUN server to help connect
+  //ice candidates are possible network routes to reach you
 
   peerConnection.onicecandidate = (event) => {
+    // This event fires whenever browser finds a new route/candidates.
     if (event.candidate) {
-      socket.emit("ice-candidate", event.candidate);
+      socket.emit("ice-candidate", event.candidate); // Send candidate to other peer using signaling server
     }
   };
 
   peerConnection.ontrack = (event) => {
+    //This runs when :  Remote user sends audio/video tracks
     remoteVideo.srcObject = event.streams[0];
   };
 
   localStream
-    .getTracks()
-    .forEach((track) => peerConnection.addTrack(track, localStream));
+    .getTracks() // localStream is a object that contains array of streams like [audiostream, videostream] which can be accessible using localStream.getTracks
+    .forEach((track) => peerConnection.addTrack(track, localStream)); //loop through each track like audiostream & videostream  AND Sends your media to remote peer.
 }
 
 // Caller Side
 async function startCall() {
   await initMedia();
   createPeerConnection();
-  const offer = await peerConnection.createOffer();
+  const offer = await peerConnection.createOffer(); // Browser creates something called SDP Offer
+  // 👉 SDP = Session Description Protocol
+  // (It describes how you want to communicate)
+  //SDP contains audio/video support codec types , networking info
   await peerConnection.setLocalDescription(offer);
-  socket.emit("offer", offer);
+  //   This tells your browser:
+  // 👉 "This offer is my official configuration."
+  // Now your browser:
+  // Stores the offer
+  // Starts gathering ICE candidates
+  // Triggers onicecandidate event
+  socket.emit("offer", offer); //This sends the offer to the other peer using signaling server.
   console.log("Offer sent...");
 }
 
