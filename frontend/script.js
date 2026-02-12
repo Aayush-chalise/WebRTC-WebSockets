@@ -93,8 +93,10 @@ async function acceptCall() {
   await initMedia();
   createPeerConnection();
 
-  await peerConnection.setRemoteDescription(
-    new RTCSessionDescription(incomingOffer),
+  // A caller and a Reciever both have local description and remote description . in local description they set their description which can be either offer or answer for a caller it would be offer and for receiver it would be answer . Now in remote description, lets say for caller it would set the answer coming from receiver and for receiver it would set the offer coming from caller to the remote description.
+  // so it is like HANDSHAKING 
+  await peerConnection.setRemoteDescription( // Tells your browser: "This is how the OTHER peer wants to communicate."
+    new RTCSessionDescription(incomingOffer), // This converts raw offer data into WebRTC format.
   );
   const answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
@@ -107,7 +109,7 @@ async function acceptCall() {
   pendingCandidates = [];
 }
 
-socket.on("answer", async (answer) => {
+socket.on("answer", async (answer) => {  // final step where the caller will receive answer and put the answer in its remote description.
   console.log("Received answer...");
   await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
 });
